@@ -89,7 +89,7 @@
         <field name="arch" type="xml">
             <search string="Statistics">
                 <field name="setup_id"/>
-                <field name="module_id"/>
+                <field name="module_name"/>
                 <filter name="filter_period" string="Period" date="period_date"/>
                 <group expand="0" string="Group By">
                     <filter name="group_setup" string="Setup" context="{'group_by': 'setup_id'}"/>

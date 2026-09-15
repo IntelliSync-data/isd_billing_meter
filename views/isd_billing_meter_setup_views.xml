@@ -27,16 +27,13 @@
                     <group>
                         <group string="Target">
                             <field name="active" invisible="1"/>
-                            <field name="allowed_module_ids" invisible="1"/>
                             <field name="allowed_menu_ids" invisible="1"/>
                             <field name="allowed_submenu_ids" invisible="1"/>
-                            <field name="module_id" domain="[('id', 'in', allowed_module_ids)]"
-                                   options="{'no_create': True, 'no_open': True}"
-                                   readonly="snapshot_count"/>
+                            <field name="module_name" readonly="snapshot_count"/>
                             <field name="menu_id" required="1" domain="[('id', 'in', allowed_menu_ids)]"
                                    context="{'ir.ui.menu.full_list': True}"
                                    options="{'no_create': True, 'no_open': True}"
-                                   readonly="not module_id or snapshot_count"/>
+                                   readonly="not module_name or snapshot_count"/>
                             <field name="submenu_id" domain="[('id', 'in', allowed_submenu_ids)]"
                                    context="{'ir.ui.menu.full_list': True}"
                                    options="{'no_create': True, 'no_open': True}"
@@ -116,7 +113,7 @@
         <field name="model">isd.billing.meter.setup</field>
         <field name="arch" type="xml">
             <list string="Modules Setup">
-                <field name="module_id"/>
+                <field name="module_name"/>
                 <field name="menu_id"/>
                 <field name="submenu_id"/>
                 <field name="period_label"/>
@@ -140,7 +137,7 @@
                     <button name="action_collect" type="object" string="Collect" class="btn-primary"
                             display="always" groups="isd_billing_meter.group_billing_meter_manager"/>
                 </header>
-                <field name="module_id"/>
+                <field name="module_name"/>
                 <field name="menu_id"/>
                 <field name="submenu_id"/>
                 <field name="period_label"/>
@@ -163,10 +160,10 @@
         <field name="arch" type="xml">
             <search string="Modules Setup">
                 <field name="name"/>
-                <field name="module_id"/>
+                <field name="module_name"/>
                 <filter name="archived" string="Archived" domain="[('active', '=', False)]"/>
                 <group expand="0" string="Group By">
-                    <filter name="group_module" string="Module" context="{'group_by': 'module_id'}"/>
+                    <filter name="group_module" string="Module" context="{'group_by': 'module_name'}"/>
                 </group>
             </search>
         </field>

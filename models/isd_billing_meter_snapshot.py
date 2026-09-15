@@ -15,7 +15,7 @@ class IsdBillingMeterSnapshot(models.Model):
     name = fields.Char(compute='_compute_name', store=True)
     setup_id = fields.Many2one('isd.billing.meter.setup', string='Setup', required=True,
                                ondelete='cascade', index=True)
-    module_id = fields.Many2one(related='setup_id.module_id', store=True)
+    module_name = fields.Selection(related='setup_id.module_name', store=True)
     year = fields.Integer(required=True)
     month = fields.Selection(MONTH_SELECTION, string='Calendar Month', required=True)
     period_date = fields.Date(string='Period', compute='_compute_period', store=True, index=True)

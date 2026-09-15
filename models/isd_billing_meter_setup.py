@@ -37,15 +37,13 @@ class IsdBillingMeterSetup(models.Model):
     active = fields.Boolean(default=True)
 
     # Target: Module -> Menu -> Sub Menu
-    module_id = fields.Many2one('ir.module.module', string='Module', required=True, ondelete='cascade')
+    # Selection instead of Many2one: ir.module.module is only readable by Settings users
+    module_name = fields.Selection(selection='_selection_module_name', string='Module', required=True)
     menu_id = fields.Many2one('ir.ui.menu', string='Menu', ondelete='set null')
     submenu_id = fields.Many2one('ir.ui.menu', string='Sub Menu', ondelete='set null')
     target_menu_id = fields.Many2one('ir.ui.menu', compute='_compute_target', store=True)
     res_model = fields.Char(string='Technical Model', compute='_compute_target', store=True)
     res_model_name = fields.Char(string='Record Type', compute='_compute_target', store=True)
-    allowed_module_ids = fields.Many2many(
-        'ir.module.module', relation='isd_billing_meter_allowed_module_rel',
-        compute='_compute_allowed_module_ids')
     allowed_menu_ids = fields.Many2many(
         'ir.ui.menu', relation='isd_billing_meter_allowed_menu_rel',
         compute='_compute_allowed_menu_ids')
@@ -112,9 +110,9 @@ class IsdBillingMeterSetup(models.Model):
             lambda m: any(self._get_menu_action(d) for d in Menu.search([('id', 'child_of', m.id)])))
 
     @api.model
-    def _get_module_menus(self, module):
+    def _get_module_menus(self, module_name):
         res_ids = self.env['ir.model.data'].sudo().search([
-            ('module', '=', module.name),
+            ('module', '=', module_name),
             ('model', '=', 'ir.ui.menu'),
         ]).mapped('res_id')
         return self._menu_env().browse(res_ids).exists()
@@ -123,10 +121,11 @@ class IsdBillingMeterSetup(models.Model):
     # Computes
     # ---------------------------------------------------------------------
 
-    @api.depends('module_id.shortdesc', 'menu_id.name', 'submenu_id.name')
+    @api.depends('module_name', 'menu_id.name', 'submenu_id.name')
     def _compute_name(self):
+        module_labels = dict(self._fields['module_name']._description_selection(self.env))
         for rec in self:
-            parts = [rec.module_id.shortdesc, rec.menu_id.name, rec.submenu_id.name]
+            parts = [module_labels.get(rec.module_name), rec.menu_id.name, rec.submenu_id.name]
             rec.name = ' / '.join(p for p in parts if p) or _('New Setup')
 
     @api.depends('menu_id', 'submenu_id')
@@ -138,8 +137,9 @@ class IsdBillingMeterSetup(models.Model):
             rec.res_model = action.res_model if action else False
             rec.res_model_name = self.env['ir.model'].sudo()._get(action.res_model).name if action else False
 
-    def _compute_allowed_module_ids(self):
-        # Modules owning an app root menu (a menu without parent)
+    @api.model
+    def _selection_module_name(self):
+        # Installed modules owning an app root menu (a menu without parent)
         root_menus = self._menu_env().search([('parent_id', '=', False)])
         names = set(self.env['ir.model.data'].sudo().search([
             ('model', '=', 'ir.ui.menu'),
@@ -150,17 +150,16 @@ class IsdBillingMeterSetup(models.Model):
             ('name', 'in', list(names)),
             ('state', '=', 'installed'),
         ])
-        for rec in self:
-            rec.allowed_module_ids = modules
+        return sorted(((m.name, m.shortdesc) for m in modules), key=lambda item: item[1].lower())
 
-    @api.depends('module_id')
+    @api.depends('module_name')
     def _compute_allowed_menu_ids(self):
         Menu = self._menu_env()
         for rec in self:
-            if not rec.module_id:
+            if not rec.module_name:
                 rec.allowed_menu_ids = False
                 continue
-            module_menus = self._get_module_menus(rec.module_id)
+            module_menus = self._get_module_menus(rec.module_name)
             app_roots = module_menus.filtered(lambda m: not m.parent_id)
             menus = Menu.search([('parent_id', 'in', app_roots.ids)])
             menus |= module_menus.filtered(lambda m: m.parent_id and not m.parent_id.parent_id)
@@ -216,8 +215,8 @@ class IsdBillingMeterSetup(models.Model):
     # Onchanges / constraints
     # ---------------------------------------------------------------------
 
-    @api.onchange('module_id')
-    def _onchange_module_id(self):
+    @api.onchange('module_name')
+    def _onchange_module_name(self):
         self.menu_id = False
         self.submenu_id = False
 
@@ -225,7 +224,7 @@ class IsdBillingMeterSetup(models.Model):
     def _onchange_menu_id(self):
         self.submenu_id = False
 
-    @api.constrains('module_id', 'menu_id', 'submenu_id')
+    @api.constrains('module_name', 'menu_id', 'submenu_id')
     def _check_target(self):
         for rec in self:
             if not rec.menu_id:
