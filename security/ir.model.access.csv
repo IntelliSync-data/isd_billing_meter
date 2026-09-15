@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_isd_billing_meter_setup_user,isd.billing.meter.setup user,model_isd_billing_meter_setup,isd_billing_meter.group_billing_meter_user,1,0,0,0
+access_isd_billing_meter_setup_manager,isd.billing.meter.setup manager,model_isd_billing_meter_setup,isd_billing_meter.group_billing_meter_manager,1,1,1,0
+access_isd_billing_meter_setup_it,isd.billing.meter.setup it,model_isd_billing_meter_setup,isd_billing_meter.group_billing_meter_it_support,1,1,1,1
+access_isd_billing_meter_snapshot_user,isd.billing.meter.snapshot user,model_isd_billing_meter_snapshot,isd_billing_meter.group_billing_meter_user,1,0,0,0
+access_isd_billing_meter_snapshot_it,isd.billing.meter.snapshot it,model_isd_billing_meter_snapshot,isd_billing_meter.group_billing_meter_it_support,1,1,1,1
+access_isd_billing_meter_update_count_it,isd.billing.meter.update.count it,model_isd_billing_meter_update_count,isd_billing_meter.group_billing_meter_it_support,1,1,1,1

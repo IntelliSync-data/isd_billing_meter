@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_billing_meter_root"
+              name="Billing Meter"
+              sequence="95"
+              groups="isd_billing_meter.group_billing_meter_user"/>
+
+    <menuitem id="menu_billing_meter_report"
+              name="Modules Report"
+              parent="menu_billing_meter_root"
+              action="action_billing_meter_report"
+              sequence="10"/>
+
+    <menuitem id="menu_billing_meter_setup"
+              name="Modules Setup"
+              parent="menu_billing_meter_root"
+              action="action_billing_meter_setup"
+              sequence="20"
+              groups="isd_billing_meter.group_billing_meter_manager"/>
+</odoo>

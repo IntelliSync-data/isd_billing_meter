@@ -1,0 +1,79 @@
+name: Update ISD Billing Meter KClickPhoto
+
+on:
+  push:
+    branches:
+      - kclickphoto
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Deploy isd_billing_meter to Server
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.KCLICKPHOTO_HOST }}
+        username: ${{ secrets.KCLICKPHOTO_USERNAME }}
+        key: ${{ secrets.KCLICKPHOTO_SSH_KEY }}
+        script_stop: true
+        script: |
+          # Clone if not exists, otherwise update
+          if [ ! -d /home/odoo/addons-system/isd_billing_meter ]; then
+            sudo -u odoo git clone git@github-odoo:IntelliSync-data/isd_billing_meter.git /home/odoo/addons-system/isd_billing_meter
+            cd /home/odoo/addons-system/isd_billing_meter && git checkout kclickphoto
+          else
+            cd /home/odoo/addons-system/isd_billing_meter
+            sudo -u odoo git fetch origin && sudo -u odoo git reset --hard origin/kclickphoto
+          fi
+
+          # Sync isd_billing_meter directory with rsync (including deletions)
+          sudo mkdir -p /opt/custom-addons/isd_billing_meter
+          sudo rsync -av --delete \
+            --exclude='views/menu_items_override.xml.*' \
+            --exclude='__manifest__.py.*' \
+            /home/odoo/addons-system/isd_billing_meter/ /opt/custom-addons/isd_billing_meter/
+
+    - name: Update isd_billing_meter Module
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.KCLICKPHOTO_HOST }}
+        username: ${{ secrets.KCLICKPHOTO_USERNAME }}
+        key: ${{ secrets.KCLICKPHOTO_SSH_KEY }}
+        script: |
+          echo "Updating apps list..."
+          echo "env['ir.module.module'].update_list(); env.cr.commit()" | sudo -u odoo /odoo-venv/bin/python /odoo18/odoo-bin shell -c /odoo.conf -d ${{ secrets.KCLICKPHOTO_DB_NAME }} --no-http
+          echo "Updating isd_billing_meter module..."
+          sudo -u odoo /odoo-venv/bin/python /odoo18/odoo-bin -c /odoo.conf -d ${{ secrets.KCLICKPHOTO_DB_NAME }} -u isd_billing_meter --stop-after-init --no-http || \
+            echo "Module not installed yet (now visible in Apps list), continuing..."
+
+    - name: Restart Odoo Service
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.KCLICKPHOTO_HOST }}
+        username: ${{ secrets.KCLICKPHOTO_USERNAME }}
+        key: ${{ secrets.KCLICKPHOTO_SSH_KEY }}
+        script: |
+          sudo systemctl restart odoo
+
+    - name: Verify Odoo Service
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.KCLICKPHOTO_HOST }}
+        username: ${{ secrets.KCLICKPHOTO_USERNAME }}
+        key: ${{ secrets.KCLICKPHOTO_SSH_KEY }}
+        script: |
+          sleep 5
+          if sudo systemctl is-active --quiet odoo; then
+            echo "Odoo restarted successfully"
+          else
+            echo "Odoo failed to restart"
+            echo "=== systemctl status ==="
+            sudo systemctl status odoo --no-pager
+            echo "=== Last 50 lines of Odoo log ==="
+            sudo tail -n 50 /var/log/odoo/odoo.log
+            exit 1
+          fi

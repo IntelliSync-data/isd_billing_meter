@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Snapshot List View -->
+    <record id="view_isd_billing_meter_snapshot_list" model="ir.ui.view">
+        <field name="name">isd.billing.meter.snapshot.list</field>
+        <field name="model">isd.billing.meter.snapshot</field>
+        <field name="arch" type="xml">
+            <list string="Monthly Statistics" create="0" edit="0" delete="0">
+                <field name="setup_id"/>
+                <field name="period_label"/>
+                <field name="count"/>
+                <field name="free_quota" optional="show"/>
+                <field name="excess" optional="show"/>
+                <field name="packs"/>
+                <field name="cost" sum="Total"/>
+                <field name="currency_id" column_invisible="True"/>
+                <field name="collected_by" optional="hide"/>
+                <field name="collected_at" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Snapshot Form View -->
+    <record id="view_isd_billing_meter_snapshot_form" model="ir.ui.view">
+        <field name="name">isd.billing.meter.snapshot.form</field>
+        <field name="model">isd.billing.meter.snapshot</field>
+        <field name="arch" type="xml">
+            <form string="Monthly Snapshot" create="0" edit="0" delete="0">
+                <header>
+                    <button name="action_open_update_count" type="object" string="Update Count"
+                            groups="isd_billing_meter.group_billing_meter_it_support"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group string="Records">
+                            <field name="setup_id"/>
+                            <field name="period_label"/>
+                            <field name="count"/>
+                            <field name="collected_by"/>
+                            <field name="collected_at"/>
+                        </group>
+                        <group string="Billing">
+                            <field name="free_quota"/>
+                            <field name="excess"/>
+                            <field name="packs"/>
+                            <field name="cost"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Snapshot Pivot View -->
+    <record id="view_isd_billing_meter_snapshot_pivot" model="ir.ui.view">
+        <field name="name">isd.billing.meter.snapshot.pivot</field>
+        <field name="model">isd.billing.meter.snapshot</field>
+        <field name="arch" type="xml">
+            <pivot string="Statistics">
+                <field name="setup_id" type="row"/>
+                <field name="period_date" type="col" interval="month"/>
+                <field name="count" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- Snapshot Graph View -->
+    <record id="view_isd_billing_meter_snapshot_graph" model="ir.ui.view">
+        <field name="name">isd.billing.meter.snapshot.graph</field>
+        <field name="model">isd.billing.meter.snapshot</field>
+        <field name="arch" type="xml">
+            <graph string="Statistics" type="line">
+                <field name="period_date" interval="month"/>
+                <field name="count" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Snapshot Search View -->
+    <record id="view_isd_billing_meter_snapshot_search" model="ir.ui.view">
+        <field name="name">isd.billing.meter.snapshot.search</field>
+        <field name="model">isd.billing.meter.snapshot</field>
+        <field name="arch" type="xml">
+            <search string="Statistics">
+                <field name="setup_id"/>
+                <field name="module_id"/>
+                <filter name="filter_period" string="Period" date="period_date"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_setup" string="Setup" context="{'group_by': 'setup_id'}"/>
+                    <filter name="group_month" string="Month" context="{'group_by': 'period_date:month'}"/>
+                    <filter name="group_year" string="Year" context="{'group_by': 'period_date:year'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Snapshot Action -->
+    <record id="action_billing_meter_snapshot" model="ir.actions.act_window">
+        <field name="name">Monthly Statistics</field>
+        <field name="res_model">isd.billing.meter.snapshot</field>
+        <field name="view_mode">list,graph,pivot,form</field>
+        <field name="path">billing-meter-statistics</field>
+        <field name="context">{'search_default_group_setup': 1}</field>
+    </record>
+
+</odoo>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_isd_billing_meter_update_count_form" model="ir.ui.view">
+        <field name="name">isd.billing.meter.update.count.form</field>
+        <field name="model">isd.billing.meter.update.count</field>
+        <field name="arch" type="xml">
+            <form string="Update Record Count">
+                <group>
+                    <field name="setup_id" readonly="1" force_save="1"/>
+                    <label for="month" string="Month"/>
+                    <div class="d-flex align-items-baseline gap-2">
+                        <field name="month" class="oe_inline"/>
+                        <field name="year" class="oe_inline" options="{'enable_formatting': false}"/>
+                    </div>
+                    <field name="current_count"/>
+                    <field name="new_count"/>
+                </group>
+                <footer>
+                    <button name="action_apply" type="object" string="Update" class="btn-primary" data-hotkey="q"/>
+                    <button string="Cancel" special="cancel" data-hotkey="x"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>

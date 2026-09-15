@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="module_category_isd_billing_meter" model="ir.module.category">
+        <field name="name">Billing Meter</field>
+        <field name="sequence">91</field>
+    </record>
+
+    <!-- User: can view Modules Report only -->
+    <record id="group_billing_meter_user" model="res.groups">
+        <field name="name">User</field>
+        <field name="category_id" ref="module_category_isd_billing_meter"/>
+    </record>
+
+    <!-- Manager: can manage Modules Setup and collect monthly counts -->
+    <record id="group_billing_meter_manager" model="res.groups">
+        <field name="name">Manager</field>
+        <field name="category_id" ref="module_category_isd_billing_meter"/>
+        <field name="implied_ids" eval="[(4, ref('group_billing_meter_user'))]"/>
+    </record>
+
+    <!-- IT Support: can update counts manually + everything Manager can do -->
+    <record id="group_billing_meter_it_support" model="res.groups">
+        <field name="name">IT Support</field>
+        <field name="category_id" ref="module_category_isd_billing_meter"/>
+        <field name="implied_ids" eval="[(4, ref('group_billing_meter_manager'))]"/>
+        <field name="users" eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"/>
+    </record>
+</odoo>

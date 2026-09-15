@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Setup Form View -->
+    <record id="view_isd_billing_meter_setup_form" model="ir.ui.view">
+        <field name="name">isd.billing.meter.setup.form</field>
+        <field name="model">isd.billing.meter.setup</field>
+        <field name="arch" type="xml">
+            <form string="Module Setup">
+                <header>
+                    <button name="action_collect" type="object" string="Collect" class="btn-primary"
+                            invisible="collect_status == 'out_of_period'"
+                            groups="isd_billing_meter.group_billing_meter_manager"/>
+                    <button name="action_open_update_count" type="object" string="Update Count"
+                            groups="isd_billing_meter.group_billing_meter_it_support"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_snapshots" type="object" class="oe_stat_button" icon="fa-bar-chart">
+                            <field name="snapshot_count" widget="statinfo" string="Statistics"/>
+                        </button>
+                    </div>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Target">
+                            <field name="active" invisible="1"/>
+                            <field name="allowed_module_ids" invisible="1"/>
+                            <field name="allowed_menu_ids" invisible="1"/>
+                            <field name="allowed_submenu_ids" invisible="1"/>
+                            <field name="module_id" domain="[('id', 'in', allowed_module_ids)]"
+                                   options="{'no_create': True, 'no_open': True}"
+                                   readonly="snapshot_count"/>
+                            <field name="menu_id" required="1" domain="[('id', 'in', allowed_menu_ids)]"
+                                   context="{'ir.ui.menu.full_list': True}"
+                                   options="{'no_create': True, 'no_open': True}"
+                                   readonly="not module_id or snapshot_count"/>
+                            <field name="submenu_id" domain="[('id', 'in', allowed_submenu_ids)]"
+                                   context="{'ir.ui.menu.full_list': True}"
+                                   options="{'no_create': True, 'no_open': True}"
+                                   readonly="not menu_id or snapshot_count"
+                                   invisible="menu_id and not allowed_submenu_ids"/>
+                            <field name="res_model_name"/>
+                        </group>
+                        <group string="Pricing">
+                            <field name="limit_record"/>
+                            <field name="promotion"/>
+                            <field name="currency_id" options="{'no_create': True, 'no_open': True}"
+                                   context="{'active_test': False}"/>
+                            <field name="price"/>
+                        </group>
+                        <group string="Period">
+                            <label for="month_from" string="From"/>
+                            <div class="d-flex align-items-baseline gap-2">
+                                <field name="month_from" class="oe_inline"/>
+                                <field name="year_from" class="oe_inline" options="{'enable_formatting': false}"/>
+                            </div>
+                            <label for="month_to" string="To"/>
+                            <div class="d-flex align-items-baseline gap-2">
+                                <field name="month_to" class="oe_inline"/>
+                                <field name="year_to" class="oe_inline" options="{'enable_formatting': false}"/>
+                            </div>
+                        </group>
+                        <group string="This Month" invisible="not id">
+                            <field name="collect_status" widget="badge"
+                                   decoration-success="collect_status == 'collected'"
+                                   decoration-danger="collect_status == 'missing'"
+                                   decoration-muted="collect_status == 'out_of_period'"/>
+                            <field name="current_count"/>
+                            <field name="current_packs"/>
+                            <field name="current_cost"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Monthly Statistics" name="statistics">
+                            <field name="snapshot_ids" readonly="1">
+                                <list>
+                                    <field name="period_label"/>
+                                    <field name="count"/>
+                                    <field name="free_quota"/>
+                                    <field name="excess"/>
+                                    <field name="packs"/>
+                                    <field name="cost" sum="Total"/>
+                                    <field name="currency_id" column_invisible="True"/>
+                                    <field name="collected_at" optional="show"/>
+                                    <button name="action_open_form" type="object" icon="fa-history" title="History"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Report Form View: same layout, read only -->
+    <record id="view_isd_billing_meter_report_form" model="ir.ui.view">
+        <field name="name">isd.billing.meter.setup.report.form</field>
+        <field name="model">isd.billing.meter.setup</field>
+        <field name="inherit_id" ref="view_isd_billing_meter_setup_form"/>
+        <field name="mode">primary</field>
+        <field name="arch" type="xml">
+            <xpath expr="/form" position="attributes">
+                <attribute name="create">0</attribute>
+                <attribute name="edit">0</attribute>
+                <attribute name="delete">0</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Setup List View -->
+    <record id="view_isd_billing_meter_setup_list" model="ir.ui.view">
+        <field name="name">isd.billing.meter.setup.list</field>
+        <field name="model">isd.billing.meter.setup</field>
+        <field name="arch" type="xml">
+            <list string="Modules Setup">
+                <field name="module_id"/>
+                <field name="menu_id"/>
+                <field name="submenu_id"/>
+                <field name="period_label"/>
+                <field name="limit_record"/>
+                <field name="promotion"/>
+                <field name="price"/>
+                <field name="currency_id" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Report List View -->
+    <record id="view_isd_billing_meter_report_list" model="ir.ui.view">
+        <field name="name">isd.billing.meter.setup.report.list</field>
+        <field name="model">isd.billing.meter.setup</field>
+        <field name="priority">20</field>
+        <field name="arch" type="xml">
+            <list string="Modules Report" create="0" delete="0"
+                  decoration-muted="collect_status == 'out_of_period'">
+                <header>
+                    <button name="action_collect" type="object" string="Collect" class="btn-primary"
+                            display="always" groups="isd_billing_meter.group_billing_meter_manager"/>
+                </header>
+                <field name="module_id"/>
+                <field name="menu_id"/>
+                <field name="submenu_id"/>
+                <field name="period_label"/>
+                <field name="current_count"/>
+                <field name="current_packs"/>
+                <field name="current_cost"/>
+                <field name="currency_id" column_invisible="True"/>
+                <field name="collect_status" widget="badge"
+                       decoration-success="collect_status == 'collected'"
+                       decoration-danger="collect_status == 'missing'"
+                       decoration-muted="collect_status == 'out_of_period'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Setup Search View -->
+    <record id="view_isd_billing_meter_setup_search" model="ir.ui.view">
+        <field name="name">isd.billing.meter.setup.search</field>
+        <field name="model">isd.billing.meter.setup</field>
+        <field name="arch" type="xml">
+            <search string="Modules Setup">
+                <field name="name"/>
+                <field name="module_id"/>
+                <filter name="archived" string="Archived" domain="[('active', '=', False)]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_module" string="Module" context="{'group_by': 'module_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Modules Report Action -->
+    <record id="action_billing_meter_report" model="ir.actions.act_window">
+        <field name="name">Modules Report</field>
+        <field name="res_model">isd.billing.meter.setup</field>
+        <field name="view_mode">list,form</field>
+        <field name="path">billing-meter-report</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_isd_billing_meter_report_list')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_isd_billing_meter_report_form')})]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No module is being metered yet</p>
+            <p>Add a package in Modules Setup, then collect the record count every month.</p>
+        </field>
+    </record>
+
+    <!-- Modules Setup Action -->
+    <record id="action_billing_meter_setup" model="ir.actions.act_window">
+        <field name="name">Modules Setup</field>
+        <field name="res_model">isd.billing.meter.setup</field>
+        <field name="view_mode">list,form</field>
+        <field name="path">billing-meter-setup</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_isd_billing_meter_setup_list')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_isd_billing_meter_setup_form')})]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Create a billing package</p>
+            <p>Choose a module, menu and sub menu, then set the record limit, free packs and price.</p>
+        </field>
+    </record>
+
+</odoo>
